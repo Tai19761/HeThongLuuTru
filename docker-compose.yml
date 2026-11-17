@@ -1,0 +1,86 @@
+services:
+  # 1. DATABASE (PostgreSQL)
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: harbor_db
+    restart: always
+    environment:
+      POSTGRES_DB: harbor_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+    ports:
+      # Cổng 5433 bên ngoài để không đụng PostgreSQL cài sẵn trên Windows (5432)
+      - "5433:5432"
+    volumes:
+      - postgres_data_new:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d harbor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # 2. MASTER NODE
+  master-node:
+    build: ./master-node
+    container_name: harbor_master
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres_db:
+        condition: service_healthy # Đợi DB sẵn sàng rồi mới chạy Master
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_db:5432/harbor_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Địa chỉ trình duyệt dùng để gọi Storage Node (được lưu vào DB khi tự tạo node)
+      - STORAGE_SEED_HOST=localhost
+      # Địa chỉ Master dùng để gọi Storage Node trong mạng Docker (khi xóa file)
+      - STORAGE_HOST_8081=storage-node-1
+      - STORAGE_HOST_8082=storage-node-2
+
+  # 3. STORAGE NODE 1
+  storage-node-1:
+    build: ./storage-node-1
+    container_name: harbor_storage_1
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    depends_on:
+      - master-node
+    environment:
+      - STORAGE_BASE_DIR=/app/data
+      - MASTER_URL=http://master-node:8000
+    volumes:
+      # File upload được lưu ra máy thật, không mất khi xóa/build lại container
+      - ./storage-data/kho-1:/app/data
+
+  # 4. STORAGE NODE 2
+  storage-node-2:
+    build: ./storage-node-2
+    container_name: harbor_storage_2
+    restart: on-failure
+    ports:
+      - "8082:8082"
+    depends_on:
+      - master-node
+    environment:
+      - STORAGE_BASE_DIR=/app/data
+      - MASTER_URL=http://master-node:8000
+    volumes:
+      - ./storage-data/kho-2:/app/data
+
+  # 5. FRONTEND (React)
+  frontend:
+    build: ./harbor-frontend
+    container_name: harbor_react
+    restart: always
+    ports:
+      - "5173:80" # Map port 5173 bên ngoài vào port 80 của Nginx bên trong
+    depends_on:
+      - master-node
+
+# Lưu trữ dữ liệu Database
+volumes:
+  postgres_data_new:

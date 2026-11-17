@@ -1,0 +1,91 @@
+# ==========================================================
+#  .gitignore cho toàn bộ dự án DuAnMeToo
+#  (harbor-frontend + master-node + storage-node-1/2)
+# ==========================================================
+
+# ---------- Thông tin nhạy cảm (mật khẩu, key) ----------
+# File cấu hình thật của master-node có mật khẩu DB -> không public.
+# Dùng file application.properties.example làm mẫu.
+master-node/src/main/resources/application.properties
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+
+# ---------- Node / Frontend (nặng) ----------
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+.vite/
+coverage/
+
+# ---------- Java / Maven (file build, nặng) ----------
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Thư mục output của Eclipse (chứa bản copy .class, pom, mvnw...)
+**/bin/
+
+# File tự sinh của Spring Initializr
+HELP.md
+
+# ---------- IDE / Editor ----------
+# Eclipse / STS
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache/
+.metadata/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+
+# ---------- Log & file tạm ----------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tmp
+*.swp
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ---------- Hệ điều hành ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- File upload thật của Storage Node khi chạy Docker ----------
+storage-data/
