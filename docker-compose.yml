@@ -24,8 +24,11 @@ services:
     build: ./master-node
     container_name: harbor_master
     restart: on-failure
-    ports:
-      - "8000:8000"
+    # Không mở cổng 8000 ra ngoài: chỉ API Gateway (Nginx) và Storage Node
+    # gọi được Master qua mạng nội bộ Docker (http://master-node:8000).
+    # Trình duyệt phải đi qua cổng 8080 của API Gateway.
+    expose:
+      - "8000"
     depends_on:
       postgres_db:
         condition: service_healthy # Đợi DB sẵn sàng rồi mới chạy Master
@@ -81,6 +84,20 @@ services:
     depends_on:
       - master-node
 
+  # 6. API GATEWAY (Nginx) - cổng vào chung cho các API
+  api-gateway:
+    image: nginx:alpine
+    container_name: harbor_api_gateway
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - master-node
+
 # Lưu trữ dữ liệu Database
 volumes:
   postgres_data_new:
+
+

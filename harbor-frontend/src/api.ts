@@ -2,7 +2,8 @@ import axios from "axios";
 
 //1. Cấu hình đường dẫn gốc tới Master Node
 const apiClient = axios.create({
-  baseURL: "http://localhost:8000/api/master",
+  // Gọi qua API Gateway (Nginx, cổng 8080) thay vì gọi thẳng Master Node (8000)
+  baseURL: "http://localhost:8080/api/master",
   headers: {
     "Content-Type": "application/json",
   },
