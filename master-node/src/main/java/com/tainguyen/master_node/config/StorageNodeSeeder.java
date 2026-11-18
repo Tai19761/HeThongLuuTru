@@ -25,14 +25,19 @@ public class StorageNodeSeeder implements CommandLineRunner {
 	@Value("${storage.seed.ports:8081,8082}")
 	private Integer[] ports;
 
+	// Khi chạy nhiều Master, chỉ cho 1 Master tự tạo node để tránh tạo trùng
+	// (Docker: Master 2 đặt STORAGE_SEED_ENABLED=false)
+	@Value("${storage.seed.enabled:true}")
+	private boolean enabled;
+
 	public StorageNodeSeeder(StorageNodeRepository nodeRepo) {
 		this.nodeRepo = nodeRepo;
 	}
 
 	@Override
 	public void run(String... args) {
-		if (nodeRepo.count() > 0) {
-			return; // Đã có node -> không làm gì
+		if (!enabled || nodeRepo.count() > 0) {
+			return; // Không được phép tạo, hoặc đã có node -> không làm gì
 		}
 		for (Integer port : ports) {
 			StorageNode node = new StorageNode();
